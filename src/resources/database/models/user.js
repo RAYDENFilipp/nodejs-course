@@ -1,9 +1,10 @@
 const uuid = require('uuid');
 
+// to mock a mongo-schema model
 class User {
   constructor({
     id = uuid(),
-    name = 'USER',
+    name = 'BaseUser',
     login = 'user',
     password = 'P@55w0rd'
   } = {}) {
