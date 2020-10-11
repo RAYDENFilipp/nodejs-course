@@ -1,5 +1,6 @@
-const User = require('../models/user');
 const mockdata = require('mockdata');
+const User = require('../models/User');
+const Board = require('../models/Board');
 
 const DB = {
   BOARDS: [],
@@ -17,50 +18,56 @@ for (let i = 0; i < 10; i++) {
   });
 }
 
-const getAll = async entity => {
-  return DB[entity];
+// init Boards
+for (let i = 0; i < 3; i++) {
+  DB.BOARDS[i] = new Board({
+    title: mockdata.title(5, 8),
+    columns: []
+  });
+}
+
+const getAll = async entityName => {
+  return DB[entityName];
 };
 
-const getEntityItemById = async (entity, id) => {
-  return DB[entity].find(user => user.id === id);
+const getEntityById = async (entityName, id) => {
+  return DB[entityName].find(entity => entity.id === id);
 };
 
-const createEntityItem = async (entity, item) => {
-  if (!item) throw new Error('invalid data');
-  const newItem = new User({ ...item });
-  return DB[entity].push(newItem) && newItem;
+const createEntity = async (entityName, entity) => {
+  if (!entity) throw new Error('invalid data');
+  return DB[entityName].push(entity) && entity;
 };
 
-const updateEntityItem = async (entity, itemId, itemData) => {
-  const itemToUpdate = DB[entity].find(item => item.id === itemId);
+const updateEntity = async (entityName, entityId, entityData) => {
+  const entityToUpdate = DB[entityName].find(entity => entity.id === entityId);
 
-  for (const itemKey of Object.getOwnPropertyNames(itemData)) {
-    // check if an existing object has a field to update
-    if (itemToUpdate[itemKey]) itemToUpdate[itemKey] = itemData[itemKey];
-    else throw new Error('invalid data');
+  if (entityToUpdate) {
+    for (const entityKey of Object.getOwnPropertyNames(entityData)) {
+      // check if an existing object has a field to update
+      if (entityToUpdate[entityKey]) {
+        entityToUpdate[entityKey] = entityData[entityKey];
+      } else throw new Error('invalid data');
+    }
   }
 
-  return itemToUpdate;
+  return entityToUpdate;
 };
 
-const deleteEntityItem = async (entity, id) => {
-  const deleteItem = DB[entity].find((item, idx, thisEntityDB) => {
-    const idsAreEqual = item.id === id;
+const deleteEntity = async (entityName, id) => {
+  return DB[entityName].find((entity, idx, thisEntityCollection) => {
+    const idsAreEqual = entity.id === id;
 
-    if (idsAreEqual) thisEntityDB.splice(idx, 1);
+    if (idsAreEqual) thisEntityCollection.splice(idx, 1);
 
     return idsAreEqual;
   });
-
-  if (!deleteItem) throw new Error('invalid data');
-
-  return deleteItem;
 };
 
 module.exports = {
   getAll,
-  getEntityItemById,
-  createEntityItem,
-  deleteEntityItem,
-  updateEntityItem
+  getEntityById,
+  createEntity,
+  deleteEntity,
+  updateEntity
 };

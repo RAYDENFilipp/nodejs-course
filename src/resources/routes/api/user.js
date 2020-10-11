@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const usersService = require('../../database/dao/user');
 const { METHODS } = require('../../../common/config');
-const createUserByIdRouteMiddleware = require('../middleware/createUserIdRouteMiddleware');
+const createEntityByIdRouteMiddleware = require('../middleware/createEntityByIdRouteMiddleware');
 
 router
   .route('/')
@@ -10,18 +10,21 @@ router
     // map user fields to exclude secret fields like "password"
     res.json(users);
   })
-  .post(async (req, res) => {
+  .post(async (req, res, next) => {
     const user = req.body;
 
-    const createdUser = await usersService.createUser(user);
-
-    res.json(createdUser);
+    try {
+      const createdUser = await usersService.createEntity(user);
+      res.json(createdUser);
+    } catch (err) {
+      return next(err);
+    }
   });
 
 router
   .route('/:id')
-  .get(createUserByIdRouteMiddleware(METHODS.GET))
-  .put(createUserByIdRouteMiddleware(METHODS.PUT))
-  .delete(createUserByIdRouteMiddleware(METHODS.DELETE));
+  .get(createEntityByIdRouteMiddleware(METHODS.GET, usersService))
+  .put(createEntityByIdRouteMiddleware(METHODS.PUT, usersService))
+  .delete(createEntityByIdRouteMiddleware(METHODS.DELETE, usersService));
 
 module.exports = router;
