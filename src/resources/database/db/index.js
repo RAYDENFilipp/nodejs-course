@@ -131,7 +131,7 @@ const updateEntity = async (entityName, entityId, entityData) => {
   if (entityToUpdate) {
     for (const entityKey of Object.getOwnPropertyNames(entityData)) {
       // check if an existing object has a field to update
-      if (entityToUpdate[entityKey]) {
+      if (entityKey in entityToUpdate) {
         entityToUpdate[entityKey] = entityData[entityKey];
       } else throw new Error('invalid data');
     }
