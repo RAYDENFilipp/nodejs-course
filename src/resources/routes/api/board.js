@@ -11,9 +11,7 @@ router
     res.json(boards);
   })
   .post(async (req, res) => {
-    const board = req.body;
-
-    const createdBoard = await boardsService.createEntity(board);
+    const createdBoard = await boardsService.createEntity(req);
 
     res.json(createdBoard);
   });

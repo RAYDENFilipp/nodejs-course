@@ -11,10 +11,8 @@ router
     res.json(users);
   })
   .post(async (req, res, next) => {
-    const user = req.body;
-
     try {
-      const createdUser = await usersService.createEntity(user);
+      const createdUser = await usersService.createEntity(req);
       res.json(createdUser);
     } catch (err) {
       return next(err);

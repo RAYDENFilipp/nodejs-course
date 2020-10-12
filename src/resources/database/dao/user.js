@@ -1,30 +1,35 @@
-const DB = require('../db');
 const User = require('../models/User');
-const USERS = 'USERS';
+const DAOBaseClass = require('./entity/DAOBaseClass');
 
-const getAll = async () =>
-  (await DB.getAll(USERS)).map(user => User.toResponse(user));
-const getEntityById = async id => {
-  const user = await DB.getEntityById(USERS, id);
-  return user && User.toResponse(user);
-};
-const createEntity = async user => {
-  const createdUser = await DB.createEntity(USERS, new User(user));
-  return createdUser && User.toResponse(createdUser);
-};
-const updateEntity = async (userId, userData) => {
-  const updatedUser = await DB.updateEntity(USERS, userId, userData);
-  return updatedUser && User.toResponse(updatedUser);
-};
-const deleteEntity = async id => {
-  const deletedUser = await DB.deleteEntity(USERS, id);
-  return deletedUser && User.toResponse(deletedUser);
-};
+class UserDAO extends DAOBaseClass {
+  constructor(entityType = 'USERS', entityCreator = User) {
+    super(entityType, entityCreator);
+    this.toResponse = this.entityCreator.toResponse;
+  }
 
-module.exports = {
-  getAll,
-  getEntityById,
-  createEntity,
-  deleteEntity,
-  updateEntity
-};
+  async getAll() {
+    const users = await super.getAll();
+
+    return users && users.map(user => this.toResponse(user));
+  }
+
+  async getEntityById(req) {
+    const user = await super.getEntityById(req);
+
+    return user && this.toResponse(user);
+  }
+
+  async createEntity(req) {
+    const newEUser = await super.createEntity(req);
+
+    return newEUser && this.toResponse(newEUser);
+  }
+
+  async deleteEntity(req) {
+    const deletedUser = await super.deleteEntity(req);
+
+    return deletedUser && this.toResponse(deletedUser);
+  }
+}
+
+module.exports = new UserDAO();
