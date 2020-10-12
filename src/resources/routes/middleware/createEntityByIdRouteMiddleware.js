@@ -5,18 +5,23 @@ const createUserByIdRouteMiddleware = (action, dao) => async (
   res,
   next
 ) => {
+  const {
+    params: { id },
+    body
+  } = req;
   let entityToReturn;
 
   try {
     switch (action) {
       case METHODS.GET:
-        entityToReturn = await dao.getEntityById(req);
+        console.log(id);
+        entityToReturn = await dao.getEntityById(id);
         break;
       case METHODS.PUT:
-        entityToReturn = await dao.updateEntity(req);
+        entityToReturn = await dao.updateEntity(id, body);
         break;
       case METHODS.DELETE:
-        entityToReturn = await dao.deleteEntity(req);
+        entityToReturn = await dao.deleteEntity(id);
         break;
       default:
         res.end();

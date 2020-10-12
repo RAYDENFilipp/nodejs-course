@@ -7,6 +7,7 @@ const Task = require('../models/Task');
 const TASKS = 'TASKS';
 const BOARDS = 'BOARDS';
 const USERS = 'USERS';
+const COLUMNS = 'COLUMNS';
 const COLUMN_NAMES = ['Unassigned', 'In Progress', 'Done'];
 
 const DB = {
@@ -106,6 +107,10 @@ function initDB() {
 }
 
 initDB();
+console.log(DB.TASKS);
+console.log(DB.BOARDS);
+console.log(DB.COLUMNS);
+console.log(DB.USERS);
 
 const getAll = async entityName => {
   return DB[entityName];
@@ -154,5 +159,5 @@ module.exports = {
   TASKS,
   BOARDS,
   USERS,
-  COLUMN_NAMES
+  COLUMNS
 };

@@ -14,24 +14,19 @@ class DAOBaseClass {
     return DB.getAll(this.entityType);
   }
 
-  getEntityById(req) {
-    const { id } = req.params;
+  getEntityById(id) {
     return DB.getEntityById(this.entityType, id);
   }
 
-  createEntity(req) {
-    const entity = req.body;
+  createEntity(entity) {
     return DB.createEntity(this.entityType, new this.entityCreator(entity));
   }
 
-  updateEntity(req) {
-    const { id } = req.params;
-    const entityData = req.body;
+  updateEntity(id, entityData) {
     return DB.updateEntity(this.entityType, id, entityData);
   }
 
-  deleteEntity(req) {
-    const { id } = req.params;
+  deleteEntity(id) {
     return DB.deleteEntity(this.entityType, id);
   }
 }

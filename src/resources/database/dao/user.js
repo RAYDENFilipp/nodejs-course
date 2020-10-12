@@ -1,8 +1,9 @@
 const User = require('../models/User');
 const DAOBaseClass = require('./entity/DAOBaseClass');
+const { USERS } = require('../db');
 
 class UserDAO extends DAOBaseClass {
-  constructor(entityType = 'USERS', entityCreator = User) {
+  constructor(entityType = USERS, entityCreator = User) {
     super(entityType, entityCreator);
     this.toResponse = this.entityCreator.toResponse;
   }
@@ -13,20 +14,20 @@ class UserDAO extends DAOBaseClass {
     return users && users.map(user => this.toResponse(user));
   }
 
-  async getEntityById(req) {
-    const user = await super.getEntityById(req);
+  async getEntityById(id) {
+    const user = await super.getEntityById(id);
 
     return user && this.toResponse(user);
   }
 
-  async createEntity(req) {
-    const newEUser = await super.createEntity(req);
+  async createEntity(entity) {
+    const newEUser = await super.createEntity(entity);
 
     return newEUser && this.toResponse(newEUser);
   }
 
-  async deleteEntity(req) {
-    const deletedUser = await super.deleteEntity(req);
+  async deleteEntity(id) {
+    const deletedUser = await super.deleteEntity(id);
 
     return deletedUser && this.toResponse(deletedUser);
   }
