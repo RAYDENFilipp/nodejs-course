@@ -2,6 +2,7 @@ const Board = require('../models/Board');
 const DAOBaseClass = require('./entity/DAOBaseClass');
 const { BOARDS } = require('../db');
 const columnDAO = require('./column');
+const taskDAO = require('./task');
 
 class BoardDAO extends DAOBaseClass {
   constructor(entityType = BOARDS, entityCreator = Board) {
@@ -20,6 +21,26 @@ class BoardDAO extends DAOBaseClass {
     }
 
     return super.createEntity(entity);
+  }
+
+  async deleteEntity(id) {
+    const deletedBoard = await super.deleteEntity(id);
+
+    if (deletedBoard) {
+      taskDAO.board = deletedBoard;
+
+      const allTasks = await taskDAO.getAll();
+
+      if (allTasks) {
+        await Promise.all(
+          allTasks.map(task => {
+            if (task.boardId === deletedBoard.id) taskDAO.deleteEntity(task.id);
+          })
+        );
+      }
+    }
+
+    return deletedBoard;
   }
 }
 

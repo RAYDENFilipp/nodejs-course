@@ -1,8 +1,7 @@
 const { TASKS } = require('../db');
 const Task = require('../models/Task');
 const DAOBaseClass = require('./entity/DAOBaseClass');
-const boardDAO = require('../../database/dao/board');
-const columnDAO = require('../../database/dao/column');
+const columnDAO = require('./column');
 
 class TaskDAO extends DAOBaseClass {
   constructor(entityType = TASKS, entityCreator = Task) {
@@ -10,17 +9,11 @@ class TaskDAO extends DAOBaseClass {
     this.board = '';
   }
 
-  async storedBoard(id) {
-    this.board = await boardDAO.getEntityById(id);
-  }
-
   async getAll() {
     const tasks = await super.getAll();
-    const taskIds =
-      this.board && this.board.columns.flatMap(column => column.tasks);
 
-    const filteredTasks =
-      taskIds.length && tasks.filter(task => taskIds.includes(task.id));
+    const filteredTasks = tasks.filter(task => task.boardId === this.board.id);
+
     return filteredTasks.length === 0 ? undefined : filteredTasks;
   }
 
@@ -91,10 +84,9 @@ class TaskDAO extends DAOBaseClass {
     const deletedTask = await super.deleteEntity(id);
 
     if (deletedTask) {
-      console.log(deletedTask);
       // delete the task from it's column
       const oldColumn = await columnDAO.getEntityById(deletedTask.columnId);
-      console.log(oldColumn);
+
       if (oldColumn) {
         // remove deleted tasks from column
         const newTasks =

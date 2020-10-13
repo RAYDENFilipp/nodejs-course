@@ -14,7 +14,6 @@ const createUserByIdRouteMiddleware = (action, dao) => async (
   try {
     switch (action) {
       case METHODS.GET:
-        console.log(id);
         entityToReturn = await dao.getEntityById(id);
         break;
       case METHODS.PUT:

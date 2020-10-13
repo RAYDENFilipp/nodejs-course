@@ -107,10 +107,6 @@ function initDB() {
 }
 
 initDB();
-console.log(DB.TASKS);
-console.log(DB.BOARDS);
-console.log(DB.COLUMNS);
-console.log(DB.USERS);
 
 const getAll = async entityName => {
   return DB[entityName];
