@@ -1,10 +1,11 @@
 const router = require('express').Router();
 const taskDAO = require('../../database/dao/task');
+const boardDAO = require('../../database/dao/board');
 const { METHODS } = require('../../../common/config');
 const createEntityByIdRouteMiddleware = require('../middleware/createEntityByIdRouteMiddleware');
 
 router.param('boardId', async (req, res, next, boardId) => {
-  await taskDAO.storedBoard(boardId);
+  taskDAO.board = await boardDAO.getEntityById(boardId);
   next();
 });
 
@@ -12,7 +13,6 @@ router
   .route('/:boardId/tasks')
   .get(async (req, res) => {
     const tasks = await taskDAO.getAll();
-    console.log(tasks);
 
     res.json(tasks);
   })

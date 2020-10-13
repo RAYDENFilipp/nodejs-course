@@ -1,8 +1,7 @@
 const { TASKS } = require('../db');
 const Task = require('../models/Task');
 const DAOBaseClass = require('./entity/DAOBaseClass');
-const boardDAO = require('../../database/dao/board');
-const columnDAO = require('../../database/dao/column');
+const columnDAO = require('./column');
 
 class TaskDAO extends DAOBaseClass {
   constructor(entityType = TASKS, entityCreator = Task) {
@@ -10,40 +9,41 @@ class TaskDAO extends DAOBaseClass {
     this.board = '';
   }
 
-  async storedBoard(id) {
-    this.board = await boardDAO.getEntityById(id);
-  }
-
   async getAll() {
     const tasks = await super.getAll();
-    const taskIds =
-      this.board && this.board.columns.flatMap(column => column.tasks);
 
-    const filteredTasks =
-      taskIds.length && tasks.filter(task => taskIds.includes(task.id));
-    return filteredTasks.length === 0 ? tasks : filteredTasks;
+    const filteredTasks = tasks.filter(task => task.boardId === this.board.id);
+
+    return filteredTasks.length === 0 ? undefined : filteredTasks;
   }
 
   async createEntity(task) {
+    const createdTask = await super.createEntity({
+      ...task,
+      boardId: this.board.id
+    });
     const columnToUpdate =
       this.board &&
-      this.board.columns.find(column => column.id === task.columnId);
+      this.board.columns.find(column => column.id === createdTask.columnId);
 
     if (columnToUpdate) {
-      columnToUpdate.push(task.id);
+      columnToUpdate.push(createdTask.id);
 
-      return task;
+      return createdTask;
     }
 
-    const newColumn = await columnDAO.createEntity({ tasks: [task.id] });
+    const newColumn = await columnDAO.createEntity({ tasks: [createdTask.id] });
     await this.board.columns.push(newColumn);
 
-    return task;
+    return createdTask;
   }
 
   async updateEntity(id, entityData) {
     const oldTask = { ...(await super.getEntityById(id)) };
-    const updatedTask = super.updateEntity(id, entityData);
+    const updatedTask = super.updateEntity(id, {
+      ...entityData,
+      boardId: this.board.id
+    });
 
     if (updatedTask) {
       const columns = this.board && this.board.columns;
@@ -54,7 +54,10 @@ class TaskDAO extends DAOBaseClass {
 
       if (columnToUpdate) {
         // remove taskId from the old column and push to the other one
-        if (!columnToUpdate.tasks.includes(updatedTask.id)) {
+        if (
+          columnToUpdate.tasks &&
+          !columnToUpdate.tasks.includes(updatedTask.id)
+        ) {
           const oldColumn = await columnDAO.getEntityById(oldTask.columnId);
           oldColumn.tasks.find((taskId, idx, currentColumn) => {
             if (taskId === oldTask.id) {
@@ -83,24 +86,17 @@ class TaskDAO extends DAOBaseClass {
     if (deletedTask) {
       // delete the task from it's column
       const oldColumn = await columnDAO.getEntityById(deletedTask.columnId);
-      // remove deleted tasks from column
-      const newTasks = oldColumn.tasks.filter(
-        taskId => taskId !== deletedTask.id
-      );
-      await columnDAO.updateEntity({ ...oldColumn, tasks: newTasks });
-      /*      const columns = this.board && this.board.columns;
-      for (let i = 0; i < columns.length; i++) {
-        const column = columns[i];
-        const success = column.find((task, idx, currentColumn) => {
-          if (task.id === deletedTask.id) {
-            currentColumn.splice(idx, 1);
-          }
 
-          return task.id === deletedTask.id;
+      if (oldColumn) {
+        // remove deleted tasks from column
+        const newTasks =
+          oldColumn.tasks &&
+          oldColumn.tasks.filter(taskId => taskId !== deletedTask.id);
+        await columnDAO.updateEntity(oldColumn.id, {
+          ...oldColumn,
+          tasks: newTasks
         });
-
-        if (success) break;
-      }*/
+      }
     }
 
     return deletedTask;
