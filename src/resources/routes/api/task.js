@@ -1,11 +1,13 @@
 const router = require('express').Router();
 const taskDAO = require('../../database/dao/task');
 const boardDAO = require('../../database/dao/board');
+const userDAO = require('../../database/dao/user');
 const { METHODS } = require('../../../common/config');
 const createEntityByIdRouteMiddleware = require('../middleware/createEntityByIdRouteMiddleware');
 
 router.param('boardId', async (req, res, next, boardId) => {
   taskDAO.board = await boardDAO.getEntityById(boardId);
+  taskDAO.userDAO = userDAO;
   next();
 });
 
@@ -20,8 +22,8 @@ router
     const task = req.body;
 
     try {
-      const createTask = await taskDAO.createEntity(task);
-      res.json(createTask);
+      const createdTask = await taskDAO.createEntity(task);
+      res.json(createdTask);
     } catch (err) {
       return next(err);
     }

@@ -91,7 +91,7 @@ function initDB() {
   DB.BOARDS.push(
     new Board({
       title: mockdata.title(5, 8),
-      columns: DB.COLUMNS
+      columns: [...DB.COLUMNS]
     })
   );
 
@@ -118,7 +118,9 @@ const getEntityById = async (entityName, id) => {
 
 const createEntity = async (entityName, entity) => {
   if (!entity) throw new Error('invalid data');
-  return DB[entityName].push(entity) && entity;
+  const isExisting = DB[entityName].includes(record => record.id === entity.id);
+
+  if (!isExisting) return DB[entityName].push(entity) && entity;
 };
 
 const updateEntity = async (entityName, entityId, entityData) => {
