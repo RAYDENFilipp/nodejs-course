@@ -6,7 +6,8 @@ const columnDAO = require('./column');
 class TaskDAO extends DAOBaseClass {
   constructor(entityType = TASKS, entityCreator = Task) {
     super(entityType, entityCreator);
-    this.board = '';
+    this.board = null;
+    this.userDAO = null;
   }
 
   async getAll() {
@@ -18,85 +19,125 @@ class TaskDAO extends DAOBaseClass {
   }
 
   async createEntity(task) {
-    const createdTask = await super.createEntity({
-      ...task,
-      boardId: this.board.id
-    });
-    const columnToUpdate =
-      this.board &&
-      this.board.columns.find(column => column.id === createdTask.columnId);
+    // if task has a columnId
+    if (task.columnId) {
+      const createdTask = await super.createEntity({
+        ...task,
+        boardId: this.board.id
+      });
 
-    if (columnToUpdate) {
-      columnToUpdate.push(createdTask.id);
+      // find a column to which the task should belong
+      const columnToUpdate = await columnDAO.getEntityById(
+        createdTask.columnId
+      );
+
+      // ...if such a column exist
+      if (columnToUpdate) {
+        await this._addTaskToColumn(columnToUpdate, createdTask);
+      } else {
+        // ...if not, create a new column by columnId
+
+        await columnDAO.createEntity({
+          id: createdTask.columnId,
+          tasks: [createdTask.id]
+        });
+      }
 
       return createdTask;
     }
 
-    const newColumn = await columnDAO.createEntity({ tasks: [createdTask.id] });
-    await this.board.columns.push(newColumn);
+    return super.createEntity({
+      ...task,
+      boardId: this.board.id
+    });
+  }
 
-    return createdTask;
+  async _addTaskToColumn(columnToUpdate, createdTask) {
+    const updatedTasks = columnToUpdate.tasks.push(createdTask.id);
+
+    await columnDAO.updateEntity(columnToUpdate.id, {
+      tasks: updatedTasks
+    });
   }
 
   async updateEntity(id, entityData) {
+    // take an old task and store it in memory by copying
     const oldTask = { ...(await super.getEntityById(id)) };
-    const updatedTask = super.updateEntity(id, {
+    //  update an existing task
+    const updatedTask = await super.updateEntity(id, {
       ...entityData,
       boardId: this.board.id
     });
 
     if (updatedTask) {
-      const columns = this.board && this.board.columns;
+      // now we have to check if an updated task has to move to another board
+      await this._updateColumns(updatedTask, oldTask);
+      // we have to add a new user if they have been added
+      if (updatedTask.userId) await this._addNewUser(updatedTask.userId);
+    }
 
-      const columnToUpdate = columns.find(
-        column => column.id === updatedTask.columnId
+    return updatedTask;
+  }
+
+  async _addNewUser(userId) {
+    if (this.userDAO) {
+      const existingUser = await this.userDAO.getEntityById(userId);
+
+      if (!existingUser) {
+        await this.userDAO.createEntity({ id: userId });
+      }
+    }
+  }
+
+  async _updateColumns(updatedTask, oldTask) {
+    if (updatedTask.columnId) {
+      const columnToUpdate = await columnDAO.getEntityById(
+        updatedTask.columnId
       );
 
+      // ...that already exists
       if (columnToUpdate) {
-        // remove taskId from the old column and push to the other one
+        // remove taskId from the old column and push to the other one, unless it is the same column
         if (
           columnToUpdate.tasks &&
           !columnToUpdate.tasks.includes(updatedTask.id)
         ) {
-          const oldColumn = await columnDAO.getEntityById(oldTask.columnId);
-          oldColumn.tasks.find((taskId, idx, currentColumn) => {
-            if (taskId === oldTask.id) {
-              currentColumn.splice(idx, 1);
-            }
+          await this._removeTaskFromPrevColumn(oldTask);
 
-            return taskId === oldTask.id;
+          await columnDAO.updateEntity(columnToUpdate.id, {
+            tasks: [...columnToUpdate.tasks, updatedTask.id]
           });
-          columnToUpdate.tasks.push(updatedTask.id);
         }
       } else {
-        // or create a new column to push the task to
-        const newColumn = await columnDAO.createEntity({
+        // ...or create a new column to push the task to, if not(updates a column array!)
+        await this._removeTaskFromPrevColumn(oldTask);
+        await columnDAO.createEntity({
+          id: updatedTask.columnId,
           tasks: [updatedTask.id]
         });
-        await this.board.columns.push(newColumn);
       }
+    } else {
+      await this._removeTaskFromPrevColumn(oldTask);
     }
+  }
 
-    return updatedTask;
+  async _removeTaskFromPrevColumn(oldTask) {
+    const oldColumn = await columnDAO.getEntityById(oldTask.columnId);
+
+    if (oldColumn && oldColumn.tasks) {
+      const newTasks = oldColumn.tasks.filter(taskId => taskId !== oldTask.id);
+
+      await columnDAO.updateEntity(oldColumn.id, {
+        tasks: newTasks
+      });
+    }
   }
 
   async deleteEntity(id) {
     const deletedTask = await super.deleteEntity(id);
 
     if (deletedTask) {
-      // delete the task from it's column
-      const oldColumn = await columnDAO.getEntityById(deletedTask.columnId);
-
-      if (oldColumn) {
-        // remove deleted tasks from column
-        const newTasks =
-          oldColumn.tasks &&
-          oldColumn.tasks.filter(taskId => taskId !== deletedTask.id);
-        await columnDAO.updateEntity(oldColumn.id, {
-          ...oldColumn,
-          tasks: newTasks
-        });
-      }
+      await this._removeTaskFromPrevColumn(deletedTask);
     }
 
     return deletedTask;

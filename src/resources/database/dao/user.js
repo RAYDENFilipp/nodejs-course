@@ -1,13 +1,13 @@
 const User = require('../models/User');
 const DAOBaseClass = require('./entity/DAOBaseClass');
 const { USERS } = require('../db');
-const taskDAO = require('./task');
-const boardDAO = require('./board');
 
 class UserDAO extends DAOBaseClass {
   constructor(entityType = USERS, entityCreator = User) {
     super(entityType, entityCreator);
     this.toResponse = this.entityCreator.toResponse;
+    this.boardDAO = null;
+    this.taskDAO = null;
   }
 
   async getAll() {
@@ -32,22 +32,32 @@ class UserDAO extends DAOBaseClass {
     const deletedUser = await super.deleteEntity(id);
 
     if (deletedUser) {
+      await this._removeUsersFromTasks();
+    }
+
+    return deletedUser && this.toResponse(deletedUser);
+  }
+
+  async _removeUsersFromTasks() {
+    const boardDAO = this.boardDAO;
+    if (boardDAO) {
       const boards = await boardDAO.getAll();
+      const taskDAO = this.taskDAO;
 
-      for (const board of boards) {
-        taskDAO.board = board;
+      if (taskDAO) {
+        for (const board of boards) {
+          taskDAO.board = board;
 
-        const tasks = await taskDAO.getAll();
+          const tasks = await taskDAO.getAll();
 
-        if (tasks) {
-          for (const task of tasks) {
-            await taskDAO.updateEntity(task.id, { ...task, userId: null });
+          if (tasks) {
+            for (const task of tasks) {
+              await taskDAO.updateEntity(task.id, { ...task, userId: null });
+            }
           }
         }
       }
     }
-
-    return deletedUser && this.toResponse(deletedUser);
   }
 }
 
