@@ -1,3 +1,4 @@
+const { StatusCodes } = require('http-status-codes');
 const { METHODS } = require('../../../common/config');
 
 const createEntitiesRouteMiddleware = dao => async (req, res, next) => {
@@ -16,7 +17,7 @@ const createEntitiesRouteMiddleware = dao => async (req, res, next) => {
     }
 
     if (entityToReturn) res.json(entityToReturn);
-    else res.sendStatus('404');
+    else res.sendStatus(StatusCodes.NOT_FOUND);
   } catch (err) {
     // eslint-disable-next-line callback-return
     next(err);
