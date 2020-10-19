@@ -1,18 +1,15 @@
 const { METHODS } = require('../../../common/config');
 
-const createUserByIdRouteMiddleware = (action, dao) => async (
-  req,
-  res,
-  next
-) => {
+const createEntityByIdRouteMiddleware = dao => async (req, res, next) => {
   const {
     params: { id },
-    body
+    body,
+    method
   } = req;
   let entityToReturn;
 
   try {
-    switch (action) {
+    switch (method) {
       case METHODS.GET:
         entityToReturn = await dao.getEntityById(id);
         break;
@@ -34,4 +31,4 @@ const createUserByIdRouteMiddleware = (action, dao) => async (
   }
 };
 
-module.exports = createUserByIdRouteMiddleware;
+module.exports = createEntityByIdRouteMiddleware;

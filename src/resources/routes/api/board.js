@@ -1,9 +1,9 @@
 const router = require('express').Router();
 const boardDAO = require('../../database/dao/board');
-const { METHODS } = require('../../../common/config');
 const columnDAO = require('../../database/dao/column');
 const taskDAO = require('../../database/dao/task');
 const createEntityByIdRouteMiddleware = require('../middleware/createEntityByIdRouteMiddleware');
+const createEntitiesRouteMiddleware = require('../middleware/createEntitiesRouteMiddleware');
 
 router.use((req, res, next) => {
   boardDAO.taskDAO = taskDAO;
@@ -11,23 +11,8 @@ router.use((req, res, next) => {
   next();
 });
 
-router
-  .route('/')
-  .get(async (req, res) => {
-    const boards = await boardDAO.getAll();
+router.route('/').all(createEntitiesRouteMiddleware(boardDAO));
 
-    res.json(boards);
-  })
-  .post(async (req, res) => {
-    const createdBoard = await boardDAO.createEntity(req.body);
-
-    res.json(createdBoard);
-  });
-
-router
-  .route('/:id')
-  .get(createEntityByIdRouteMiddleware(METHODS.GET, boardDAO))
-  .put(createEntityByIdRouteMiddleware(METHODS.PUT, boardDAO))
-  .delete(createEntityByIdRouteMiddleware(METHODS.DELETE, boardDAO));
+router.route('/:id').all(createEntityByIdRouteMiddleware(boardDAO));
 
 module.exports = router;
