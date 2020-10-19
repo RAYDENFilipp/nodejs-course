@@ -117,7 +117,8 @@ const getEntityById = async (entityName, id) => {
 };
 
 const createEntity = async (entityName, entity) => {
-  if (!entity) throw new Error('invalid data');
+  if (!entity) throw new Error('invalid entity');
+
   const isExisting = DB[entityName].includes(record => record.id === entity.id);
 
   if (!isExisting) return DB[entityName].push(entity) && entity;
@@ -131,7 +132,7 @@ const updateEntity = async (entityName, entityId, entityData) => {
       // check if an existing object has a field to update
       if (entityKey in entityToUpdate) {
         entityToUpdate[entityKey] = entityData[entityKey];
-      } else throw new Error('invalid data');
+      } else throw new Error('invalid entity');
     }
   }
 

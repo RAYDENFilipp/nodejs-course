@@ -1,18 +1,16 @@
+const { StatusCodes } = require('http-status-codes');
 const { METHODS } = require('../../../common/config');
 
-const createUserByIdRouteMiddleware = (action, dao) => async (
-  req,
-  res,
-  next
-) => {
+const createEntityByIdRouteMiddleware = dao => async (req, res, next) => {
   const {
     params: { id },
-    body
+    body,
+    method
   } = req;
   let entityToReturn;
 
   try {
-    switch (action) {
+    switch (method) {
       case METHODS.GET:
         entityToReturn = await dao.getEntityById(id);
         break;
@@ -27,11 +25,11 @@ const createUserByIdRouteMiddleware = (action, dao) => async (
     }
 
     if (entityToReturn) res.json(entityToReturn);
-    else res.sendStatus('404');
+    else res.sendStatus(StatusCodes.NOT_FOUND);
   } catch (err) {
     // eslint-disable-next-line callback-return
     next(err);
   }
 };
 
-module.exports = createUserByIdRouteMiddleware;
+module.exports = createEntityByIdRouteMiddleware;
