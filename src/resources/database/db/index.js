@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Board = require('../models/Board');
 const Column = require('../models/Column');
 const Task = require('../models/Task');
+const createIdNotFoundError = require('../errors/dbError');
 
 const TASKS = 'TASKS';
 const BOARDS = 'BOARDS';
@@ -113,17 +114,21 @@ const getAll = async entityName => {
 };
 
 const getEntityById = async (entityName, id) => {
+  throwIfIdOutOfRange(entityName, id);
+
   return DB[entityName].find(entity => entity.id === id);
 };
 
 const createEntity = async (entityName, entity) => {
-  if (!entity) throw new Error('invalid data');
+  if (!entity) throw new Error('invalid entity');
+
   const isExisting = DB[entityName].includes(record => record.id === entity.id);
 
   if (!isExisting) return DB[entityName].push(entity) && entity;
 };
 
 const updateEntity = async (entityName, entityId, entityData) => {
+  throwIfIdOutOfRange(entityName, entityId);
   const entityToUpdate = DB[entityName].find(entity => entity.id === entityId);
 
   if (entityToUpdate) {
@@ -131,7 +136,7 @@ const updateEntity = async (entityName, entityId, entityData) => {
       // check if an existing object has a field to update
       if (entityKey in entityToUpdate) {
         entityToUpdate[entityKey] = entityData[entityKey];
-      } else throw new Error('invalid data');
+      } else throw new Error('invalid entity');
     }
   }
 
@@ -139,6 +144,8 @@ const updateEntity = async (entityName, entityId, entityData) => {
 };
 
 const deleteEntity = async (entityName, id) => {
+  throwIfIdOutOfRange(entityName, id);
+
   return DB[entityName].find((entity, idx, thisEntityCollection) => {
     const idsAreEqual = entity.id === id;
 
@@ -147,6 +154,12 @@ const deleteEntity = async (entityName, id) => {
     return idsAreEqual;
   });
 };
+
+function throwIfIdOutOfRange(entityName, id) {
+  if (DB[entityName].findIndex(entity => entity.id === id) === -1) {
+    throw createIdNotFoundError(entityName, id);
+  }
+}
 
 module.exports = {
   getAll,
