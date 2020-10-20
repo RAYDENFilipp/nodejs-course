@@ -2,14 +2,14 @@ const { StatusCodes } = require('http-status-codes');
 const { METHODS } = require('../../../common/config');
 
 const createEntityByIdRouteMiddleware = dao => async (req, res, next) => {
-  const {
-    params: { id },
-    body,
-    method
-  } = req;
-  let entityToReturn;
-
   try {
+    const {
+      params: { id },
+      body,
+      method
+    } = req;
+    let entityToReturn;
+
     switch (method) {
       case METHODS.GET:
         entityToReturn = await dao.getEntityById(id);
@@ -21,14 +21,13 @@ const createEntityByIdRouteMiddleware = dao => async (req, res, next) => {
         entityToReturn = await dao.deleteEntity(id);
         break;
       default:
-        res.end();
+        res.sendStatus(StatusCodes.NOT_IMPLEMENTED);
     }
 
     if (entityToReturn) res.json(entityToReturn);
     else res.sendStatus(StatusCodes.NOT_FOUND);
   } catch (err) {
-    // eslint-disable-next-line callback-return
-    next(err);
+    return next(err);
   }
 };
 

@@ -13,14 +13,13 @@ const createEntitiesRouteMiddleware = dao => async (req, res, next) => {
         entityToReturn = await dao.createEntity(req.body);
         break;
       default:
-        res.end();
+        res.sendStatus(StatusCodes.NOT_IMPLEMENTED);
     }
 
     if (entityToReturn) res.json(entityToReturn);
     else res.sendStatus(StatusCodes.NOT_FOUND);
   } catch (err) {
-    // eslint-disable-next-line callback-return
-    next(err);
+    return next(err);
   }
 };
 
