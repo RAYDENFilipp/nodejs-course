@@ -17,11 +17,11 @@ colors.setTheme({
 
 const logRequests = async (req, res, next) => {
   const start = Date.now();
-  const { method, originalUrl, params, body } = req;
   const writeFile = data =>
     fs.writeFile('requests.log', `${data}\n`, { flag: 'a+' }, err => next(err));
 
   finished(res, async () => {
+    const { method, originalUrl, params, body } = req;
     const end = Date.now() - start;
     const { statusCode } = res;
 
