@@ -15,7 +15,7 @@ const createEntityByIdRouteMiddleware = dao => async (req, res, next) => {
         entityToReturn = await dao.getEntityById(id);
         break;
       case METHODS.PUT:
-        entityToReturn = await dao.updateEntity(id, body);
+        entityToReturn = await dao.replaceEntity(id, body);
         break;
       case METHODS.DELETE:
         entityToReturn = await dao.deleteEntity(id);

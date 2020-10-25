@@ -1,64 +1,46 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
-const DAOBaseClass = require('./entity/DAOBaseClass');
-const { USERS } = require('../db');
+const Task = require('../models/Task');
 
-class UserDAO extends DAOBaseClass {
-  constructor(entityType = USERS, entityCreator = User) {
-    super(entityType, entityCreator);
-    this.toResponse = this.entityCreator.toResponse;
-    this.boardDAO = null;
-    this.taskDAO = null;
-  }
+module.exports = {
+  getAll() {
+    return User.find({}).exec();
+  },
 
-  async getAll() {
-    const users = await super.getAll();
-
-    return users && users.map(user => this.toResponse(user));
-  }
-
-  async getEntityById(id) {
-    const user = await super.getEntityById(id);
-
-    return user && this.toResponse(user);
-  }
+  getEntityById(id) {
+    return User.findById(id).exec();
+  },
 
   async createEntity(entity) {
-    const newEUser = await super.createEntity(entity);
+    await User.init();
+    return User.create(entity);
+  },
 
-    return newEUser && this.toResponse(newEUser);
-  }
+  replaceEntity(id, entityData) {
+    const options = {
+      new: true,
+      omitUndefined: true
+    };
+
+    return User.findOneAndReplace({ _id: id }, entityData, options).exec();
+  },
 
   async deleteEntity(id) {
-    const deletedUser = await super.deleteEntity(id);
+    const session = await mongoose.startSession();
+    let deletedUser;
 
-    if (deletedUser) {
-      await this._removeUsersFromTasks();
-    }
+    await session.withTransaction(async () => {
+      deletedUser = await User.findByIdAndDelete(id)
+        .session(session)
+        .exec();
 
-    return deletedUser && this.toResponse(deletedUser);
+      await Task.updateMany({ userId: id }, { userId: null })
+        .session(session)
+        .exec();
+    });
+
+    await session.endSession();
+
+    return deletedUser;
   }
-
-  async _removeUsersFromTasks() {
-    const boardDAO = this.boardDAO;
-    if (boardDAO) {
-      const boards = await boardDAO.getAll();
-      const taskDAO = this.taskDAO;
-
-      if (taskDAO) {
-        for (const board of boards) {
-          taskDAO.board = board;
-
-          const tasks = await taskDAO.getAll();
-
-          if (tasks) {
-            for (const task of tasks) {
-              await taskDAO.updateEntity(task.id, { ...task, userId: null });
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-module.exports = new UserDAO();
+};

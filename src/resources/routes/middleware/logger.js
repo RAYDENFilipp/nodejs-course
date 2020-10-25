@@ -87,7 +87,7 @@ const logErrors = async (err, req, res, next) => {
 const logUnhandledErrors = () => {
   const writeFileSync = data =>
     // eslint-disable-next-line no-sync
-    fs.writeFileSync('errors.log', `${data}\n`, { flag: 'a+' }, () => {});
+    fs.writeFileSync('errors.log', `${data}\n`, { flag: 'a+' });
 
   const processError = (err, origin) => {
     const errorMessage = `Unhandled Error: {\nStack: ${

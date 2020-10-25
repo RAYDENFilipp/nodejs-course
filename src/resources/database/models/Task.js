@@ -1,24 +1,31 @@
-const uuid = require('uuid');
+const { model, Schema } = require('mongoose');
+const toJson = require('@meanie/mongoose-to-json');
 
-// to mock a mongo-schema model
-class Task {
-  constructor({
-    id = uuid(),
-    title = 'TASK TITLE',
-    order = 0,
-    description = 'description',
-    userId = null,
-    columnId = null,
-    boardId = null
-  } = {}) {
-    this.id = id;
-    this.title = title;
-    this.order = order;
-    this.description = description;
-    this.userId = userId;
-    this.columnId = columnId;
-    this.boardId = boardId;
+const taskSchema = new Schema(
+  {
+    title: {
+      type: String,
+      unique: true,
+      required: true
+    },
+    order: {
+      type: Number,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    userId: Schema.Types.ObjectId,
+    columnId: Schema.Types.ObjectId,
+    boardId: Schema.Types.ObjectId
+  },
+  {
+    versionKey: false,
+    strict: 'throw'
   }
-}
+);
 
-module.exports = Task;
+taskSchema.plugin(toJson);
+
+module.exports = model('Task', taskSchema);

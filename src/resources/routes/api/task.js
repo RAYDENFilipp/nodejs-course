@@ -1,13 +1,19 @@
+const { StatusCodes } = require('http-status-codes');
+
 const router = require('express').Router();
 const taskDAO = require('../../database/dao/task');
 const boardDAO = require('../../database/dao/board');
-const userDAO = require('../../database/dao/user');
 const createEntityByIdRouteMiddleware = require('../middleware/createEntityByIdRouteMiddleware');
 const createEntitiesRouteMiddleware = require('../middleware/createEntitiesRouteMiddleware');
 
 router.param('boardId', async (req, res, next, boardId) => {
-  taskDAO.board = await boardDAO.getEntityById(boardId);
-  taskDAO.userDAO = userDAO;
+  const foundBoard = await boardDAO.getEntityById(boardId);
+  if (!foundBoard) {
+    res.sendStatus(StatusCodes.NOT_FOUND);
+    return next('route');
+  }
+  taskDAO.setBoard(foundBoard);
+
   next();
 });
 

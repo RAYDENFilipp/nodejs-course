@@ -1,23 +1,29 @@
-const uuid = require('uuid');
+const { model, Schema } = require('mongoose');
+const toJson = require('@meanie/mongoose-to-json');
 
-// to mock a mongo-schema model
-class User {
-  constructor({
-    id = uuid(),
-    name = 'BaseUser',
-    login = 'user',
-    password = 'P@55w0rd'
-  } = {}) {
-    this.id = id;
-    this.name = name;
-    this.login = login;
-    this.password = password;
+const userSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true
+    },
+    login: {
+      type: String,
+      unique: true,
+      required: true
+    },
+    password: {
+      type: String,
+      required: true,
+      private: true
+    }
+  },
+  {
+    versionKey: false,
+    strict: 'throw'
   }
+);
 
-  static toResponse(user) {
-    const { id, name, login } = user;
-    return { id, name, login };
-  }
-}
+userSchema.plugin(toJson);
 
-module.exports = User;
+module.exports = model('User', userSchema);
