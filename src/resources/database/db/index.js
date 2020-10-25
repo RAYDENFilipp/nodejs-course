@@ -1,13 +1,17 @@
 const mockdata = require('mockdata');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Board = require('../models/Board');
 const Column = require('../models/Column');
+const { getRandomEntityIdCreator } = require('./utils');
+const { PORT, MONGO_CONNECTION_STRING } = require('../../../common/config');
 const Task = require('../models/Task');
 
 const TASKS = 'TASKS';
 const BOARDS = 'BOARDS';
 const USERS = 'USERS';
 const COLUMNS = 'COLUMNS';
+
 const COLUMN_NAMES = ['Unassigned', 'In Progress', 'Done'];
 
 const DB = {
@@ -18,27 +22,26 @@ const DB = {
 };
 
 // INITIALIZATION STEP
-function initDB() {
-  const randomIndex = indices => Math.floor(Math.random() * indices);
-
-  const getRandomEntityIdCreator = entityList => {
-    const entityListCopy = [...entityList];
-
-    return () => {
-      const indices = entityListCopy.length;
-
-      if (indices) {
-        const entityIndex = randomIndex(indices);
-        const entityId = entityListCopy[entityIndex].id;
-
-        entityListCopy.splice(entityIndex, 1);
-
-        return entityId;
-      }
-
-      return null;
-    };
+async function initDB(cb) {
+  // https://stackoverflow.com/questions/51960171/node63208-deprecationwarning-collection-ensureindex-is-deprecated-use-creat
+  const mongooseOptions = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true
   };
+  await mongoose.connect(MONGO_CONNECTION_STRING, mongooseOptions, err => {
+    if (err) console.error('Initial connection error: ', err);
+  });
+
+  const db = mongoose.connection;
+
+  db.on('error', console.error.bind(console, 'connection error:'));
+  db.once('open', async () => {
+    await db.dropDatabase();
+
+    cb(PORT, () => console.log(`App is running on http://localhost:${PORT}`));
+  });
 
   // init 10 Users
   for (let i = 0; i < 10; i++) {
@@ -47,6 +50,8 @@ function initDB() {
       login: `${mockdata.name()}${mockdata.chars(1, 5)}`,
       password: `${mockdata.chars(5, 10)}`
     });
+
+    await DB.USERS[i].save();
   }
 
   // init 15 Tasks
@@ -106,8 +111,6 @@ function initDB() {
   });
 }
 
-initDB();
-
 const getAll = async entityName => {
   return DB[entityName];
 };
@@ -150,6 +153,7 @@ const deleteEntity = async (entityName, id) => {
 };
 
 module.exports = {
+  initDB,
   getAll,
   getEntityById,
   createEntity,
