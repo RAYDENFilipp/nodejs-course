@@ -1,4 +1,9 @@
 const app = require('./app');
-const { initDB } = require('./resources/database/db');
+const { PORT } = require('./common/config');
+const { connectDb } = require('./resources/database/db');
 
-(async cb => initDB(cb))(app.listen);
+connectDb();
+
+app.listen(PORT, () =>
+  console.log(`App is running on http://localhost:${PORT}`)
+);

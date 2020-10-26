@@ -1,20 +1,19 @@
-const mockdata = require('mockdata');
 const { model, Schema } = require('mongoose');
 
 const userSchema = new Schema(
   {
     name: {
       type: String,
-      default: mockdata.name()
+      required: true
     },
     login: {
       type: String,
       unique: true,
-      default: `${mockdata.name()}${mockdata.chars(1, 5)}`
+      required: true
     },
     password: {
       type: String,
-      default: `${mockdata.chars(5, 10)}`
+      required: true
     }
   },
   {

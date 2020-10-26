@@ -1,18 +1,22 @@
-const uuid = require('uuid');
+const { model, Schema } = require('mongoose');
 
-// to mock a mongo-schema model
-class Column {
-  constructor({
-    id = uuid(),
-    title = 'COLUMN TITLE',
-    order = 0,
-    tasks = []
-  } = {}) {
-    this.id = id;
-    this.title = title;
-    this.order = order;
-    this.tasks = tasks;
+const columnSchema = new Schema(
+  {
+    title: {
+      type: String,
+      unique: true,
+      required: true
+    },
+    order: {
+      type: Number,
+      required: true
+    },
+    tasks: [{ type: Schema.Types.ObjectId, ref: 'Column' }]
+  },
+  {
+    versionKey: false,
+    strict: 'throw'
   }
-}
+);
 
-module.exports = Column;
+module.exports = model('Column', columnSchema);

@@ -8,7 +8,7 @@ const getRandomEntityIdCreator = entityList => {
 
     if (indices) {
       const entityIndex = randomIndex(indices);
-      const entityId = entityListCopy[entityIndex].id;
+      const entityId = entityListCopy[entityIndex]._id;
 
       entityListCopy.splice(entityIndex, 1);
 
