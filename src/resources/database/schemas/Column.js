@@ -1,6 +1,6 @@
-const { model, Schema } = require('mongoose');
+const { Schema } = require('mongoose');
 
-const columnSchema = new Schema(
+module.exports = new Schema(
   {
     title: {
       type: String,
@@ -10,13 +10,10 @@ const columnSchema = new Schema(
     order: {
       type: Number,
       required: true
-    },
-    tasks: [{ type: Schema.Types.ObjectId, ref: 'Column' }]
+    }
   },
   {
     versionKey: false,
     strict: 'throw'
   }
 );
-
-module.exports = model('Column', columnSchema);

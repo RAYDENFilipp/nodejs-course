@@ -2,7 +2,6 @@ const mockdata = require('mockdata');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Board = require('../models/Board');
-const Column = require('../models/Column');
 const { getRandomEntityIdCreator } = require('./utils');
 const { MONGO_CONNECTION_STRING } = require('../../../common/config');
 const Task = require('../models/Task');
@@ -47,14 +46,21 @@ const initDB = async () => {
     DB.COLUMNS[i] = {
       _id: new mongoose.Types.ObjectId(),
       title: COLUMN_NAMES[i],
-      order: i,
-      tasks: []
+      order: i
     };
   }
+
+  // init 1 Board
+  DB.BOARDS.push({
+    _id: new mongoose.Types.ObjectId(),
+    title: mockdata.title(5, 8),
+    columns: [...DB.COLUMNS]
+  });
 
   // fill each Column with tasks equally (if possible)
   const getRandomTaskId = getRandomEntityIdCreator(DB.TASKS);
   for (const column of DB.COLUMNS) {
+    const boardId = DB.BOARDS[0]._id;
     const quantity = DB.TASKS.length / DB.COLUMNS.length;
 
     for (let i = 0; i < quantity; i++) {
@@ -63,8 +69,7 @@ const initDB = async () => {
       const taskToUpdate = DB.TASKS.find(task => task._id === randomTaskId);
 
       taskToUpdate.columnId = column._id;
-
-      randomTaskId && column.tasks.push(randomTaskId);
+      taskToUpdate.boardId = boardId;
     }
   }
 
@@ -72,11 +77,7 @@ const initDB = async () => {
   return Promise.all([
     User.insertMany(DB.USERS),
     Task.insertMany(DB.TASKS),
-    Column.insertMany(DB.COLUMNS),
-    new Board({
-      title: mockdata.title(5, 8),
-      columns: [...DB.COLUMNS]
-    }).save()
+    new Board(DB.BOARDS[0]).save()
   ]);
 };
 

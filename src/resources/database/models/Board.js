@@ -1,4 +1,5 @@
 const { model, Schema } = require('mongoose');
+const columnSchema = require('../schemas/Column');
 
 const boardSchema = new Schema(
   {
@@ -7,7 +8,7 @@ const boardSchema = new Schema(
       unique: true,
       required: true
     },
-    columns: [{ type: Schema.Types.ObjectId, ref: 'Column' }]
+    columns: [columnSchema]
   },
   {
     versionKey: false,
