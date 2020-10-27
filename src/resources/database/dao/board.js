@@ -1,77 +1,46 @@
+const mongoose = require('mongoose');
 const Board = require('../models/Board');
-const DAOBaseClass = require('./entity/DAOBaseClass');
-const { BOARDS } = require('../db');
+const Task = require('../models/Task');
 
-class BoardDAO extends DAOBaseClass {
-  constructor(entityType = BOARDS, entityCreator = Board) {
-    super(entityType, entityCreator);
-    this.taskDAO = null;
-    this.columnDAO = null;
-  }
+module.exports = {
+  getAll() {
+    return Board.find({}).exec();
+  },
 
-  async createEntity(entity) {
-    const { columns } = entity;
+  getEntityById(id) {
+    return Board.findById(id).exec();
+  },
 
-    if (columns) {
-      const producedColumns = await this._produceColumns(columns);
+  createEntity(entity) {
+    return Board.create(entity);
+  },
 
-      if (producedColumns) {
-        return super.createEntity({ ...entity, columns: producedColumns });
-      }
-    }
+  replaceEntity(id, entityData) {
+    const options = {
+      new: true,
+      omitUndefined: true,
+      returnOriginal: false
+    };
 
-    return super.createEntity(entity);
-  }
-
-  async _produceColumns(columns) {
-    const columnDAO = this.columnDAO;
-    if (columnDAO) {
-      return Promise.all(columns.map(column => columnDAO.createEntity(column)));
-    }
-  }
+    return Board.findOneAndReplace({ _id: id }, entityData, options).exec();
+  },
 
   async deleteEntity(id) {
-    const deletedBoard = await super.deleteEntity(id);
+    const session = await mongoose.startSession();
+    let deletedBoard;
 
-    if (deletedBoard) {
-      await this._deleteRelatedTasks(deletedBoard);
-      await this._deleteRelatedColumns(deletedBoard);
-    }
+    await session.withTransaction(async () => {
+      deletedBoard = await Board.findOneAndDelete(id)
+        .session(session)
+        .exec();
+
+      await Task.updateMany({ boardId: id }, { columnId: null, boardId: null })
+        .session(session)
+        .exec();
+    });
+
+    session.endSession();
 
     return deletedBoard;
   }
-
-  async _deleteRelatedColumns(deletedBoard) {
-    const columnDAO = this.columnDAO;
-
-    if (columnDAO) {
-      const columns = deletedBoard.columns;
-
-      await Promise.all(
-        columns.map(column => columnDAO.deleteEntity(column.id))
-      );
-    }
-  }
-
-  async _deleteRelatedTasks(deletedBoard) {
-    const taskDAO = this.taskDAO;
-
-    if (taskDAO) {
-      taskDAO.board = deletedBoard;
-
-      const allTasks = await taskDAO.getAll();
-
-      if (allTasks) {
-        await Promise.all(
-          allTasks.map(task => {
-            if (task.boardId === deletedBoard.id) {
-              taskDAO.deleteEntity(task.id);
-            }
-          })
-        );
-      }
-    }
-  }
-}
-
-module.exports = new BoardDAO();
+};
