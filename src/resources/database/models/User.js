@@ -22,4 +22,14 @@ const userSchema = new Schema(
   }
 );
 
+userSchema.post(/save|find/, userData => {
+  if (Array.isArray(userData)) {
+    userData.forEach(user => (user.password = undefined));
+  } else {
+    userData.password = undefined;
+  }
+
+  return userData;
+});
+
 module.exports = model('User', userSchema);
