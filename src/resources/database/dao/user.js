@@ -30,7 +30,7 @@ module.exports = {
     let deletedUser;
 
     await session.withTransaction(async () => {
-      deletedUser = await User.findOneAndDelete(id)
+      deletedUser = await User.findByIdAndDelete(id)
         .session(session)
         .exec();
 

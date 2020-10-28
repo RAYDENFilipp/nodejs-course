@@ -1,11 +1,14 @@
-const { Schema } = require('mongoose');
+const { Schema, Types } = require('mongoose');
 const toJson = require('@meanie/mongoose-to-json');
 
 const columnSchema = new Schema(
   {
+    _id: {
+      type: Schema.Types.ObjectId,
+      default: new Types.ObjectId()
+    },
     title: {
       type: String,
-      unique: true,
       required: true
     },
     order: {
@@ -15,7 +18,8 @@ const columnSchema = new Schema(
   },
   {
     versionKey: false,
-    strict: 'throw'
+    strict: 'throw',
+    _id: false
   }
 );
 

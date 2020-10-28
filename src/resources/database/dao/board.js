@@ -11,15 +11,14 @@ module.exports = {
     return Board.findById(id).exec();
   },
 
-  createEntity(entity) {
+  async createEntity(entity) {
     return Board.create(entity);
   },
 
-  replaceEntity(id, entityData) {
+  async replaceEntity(id, entityData) {
     const options = {
       new: true,
-      omitUndefined: true,
-      returnOriginal: false
+      omitUndefined: true
     };
 
     return Board.findOneAndReplace({ _id: id }, entityData, options).exec();
@@ -30,11 +29,11 @@ module.exports = {
     let deletedBoard;
 
     await session.withTransaction(async () => {
-      deletedBoard = await Board.findOneAndDelete(id)
+      deletedBoard = await Board.findByIdAndDelete(id)
         .session(session)
         .exec();
 
-      await Task.updateMany({ boardId: id }, { columnId: null, boardId: null })
+      await Task.deleteMany({ boardId: id })
         .session(session)
         .exec();
     });
