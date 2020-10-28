@@ -15,9 +15,9 @@ const taskSchema = new Schema(
       type: String,
       required: true
     },
-    userId: { type: Schema.Types.ObjectId, ref: 'User' },
-    columnId: { type: Schema.Types.ObjectId, ref: 'Column' },
-    boardId: { type: Schema.Types.ObjectId, ref: 'Board' }
+    userId: Schema.Types.ObjectId,
+    columnId: Schema.Types.ObjectId,
+    boardId: Schema.Types.ObjectId
   },
   {
     versionKey: false,

@@ -4,11 +4,15 @@ const Task = require('../models/Task');
 
 module.exports = {
   getAll() {
-    return Board.find({}).exec();
+    return Board.find({})
+      .lean()
+      .exec();
   },
 
   getEntityById(id) {
-    return Board.findById(id).exec();
+    return Board.findById(id)
+      .lean()
+      .exec();
   },
 
   createEntity(entity) {
@@ -22,7 +26,9 @@ module.exports = {
       returnOriginal: false
     };
 
-    return Board.findOneAndReplace({ _id: id }, entityData, options).exec();
+    return Board.findOneAndReplace({ _id: id }, entityData, options)
+      .lean()
+      .exec();
   },
 
   async deleteEntity(id) {
@@ -32,6 +38,7 @@ module.exports = {
     await session.withTransaction(async () => {
       deletedBoard = await Board.findOneAndDelete(id)
         .session(session)
+        .lean()
         .exec();
 
       await Task.updateMany({ boardId: id }, { columnId: null, boardId: null })
@@ -39,7 +46,7 @@ module.exports = {
         .exec();
     });
 
-    session.endSession();
+    await session.endSession();
 
     return deletedBoard;
   }
