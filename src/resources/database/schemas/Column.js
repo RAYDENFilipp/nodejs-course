@@ -1,6 +1,7 @@
 const { Schema } = require('mongoose');
+const toJson = require('@meanie/mongoose-to-json');
 
-module.exports = new Schema(
+const columnSchema = new Schema(
   {
     title: {
       type: String,
@@ -17,3 +18,7 @@ module.exports = new Schema(
     strict: 'throw'
   }
 );
+
+columnSchema.plugin(toJson);
+
+module.exports = columnSchema;

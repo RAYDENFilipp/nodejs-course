@@ -4,18 +4,15 @@ const Task = require('../models/Task');
 
 module.exports = {
   getAll() {
-    return User.find({})
-      .lean()
-      .exec();
+    return User.find({}).exec();
   },
 
   getEntityById(id) {
-    return User.findById(id)
-      .lean()
-      .exec();
+    return User.findById(id).exec();
   },
 
-  createEntity(entity) {
+  async createEntity(entity) {
+    await User.init();
     return User.create(entity);
   },
 
@@ -25,9 +22,7 @@ module.exports = {
       omitUndefined: true
     };
 
-    return User.findOneAndReplace({ _id: id }, entityData, options)
-      .lean()
-      .exec();
+    return User.findOneAndReplace({ _id: id }, entityData, options).exec();
   },
 
   async deleteEntity(id) {
@@ -37,12 +32,10 @@ module.exports = {
     await session.withTransaction(async () => {
       deletedUser = await User.findOneAndDelete(id)
         .session(session)
-        .lean()
         .exec();
 
       await Task.updateMany({ userId: id }, { userId: null })
         .session(session)
-        .lean()
         .exec();
     });
 

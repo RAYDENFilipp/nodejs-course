@@ -1,4 +1,5 @@
 const { model, Schema } = require('mongoose');
+const toJson = require('@meanie/mongoose-to-json');
 
 const userSchema = new Schema(
   {
@@ -13,7 +14,8 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true
+      required: true,
+      private: true
     }
   },
   {
@@ -22,14 +24,6 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.post(/save|find/, userData => {
-  if (Array.isArray(userData)) {
-    userData.forEach(user => (user.password = undefined));
-  } else {
-    userData.password = undefined;
-  }
-
-  return userData;
-});
+userSchema.plugin(toJson);
 
 module.exports = model('User', userSchema);

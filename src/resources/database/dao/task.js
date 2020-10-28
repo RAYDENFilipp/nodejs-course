@@ -60,8 +60,6 @@ module.exports = {
   },
 
   async deleteEntity(id) {
-    return Task.findOneAndDelete(id)
-      .lean()
-      .exec();
+    return Task.findOneAndDelete(id).exec();
   }
 };

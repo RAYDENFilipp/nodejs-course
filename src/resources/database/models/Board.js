@@ -1,5 +1,6 @@
 const { model, Schema } = require('mongoose');
 const columnSchema = require('../schemas/Column');
+const toJson = require('@meanie/mongoose-to-json');
 
 const boardSchema = new Schema(
   {
@@ -15,5 +16,7 @@ const boardSchema = new Schema(
     strict: 'throw'
   }
 );
+
+boardSchema.plugin(toJson);
 
 module.exports = model('Board', boardSchema);

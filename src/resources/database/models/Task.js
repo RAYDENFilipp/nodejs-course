@@ -1,4 +1,5 @@
 const { model, Schema } = require('mongoose');
+const toJson = require('@meanie/mongoose-to-json');
 
 const taskSchema = new Schema(
   {
@@ -24,5 +25,7 @@ const taskSchema = new Schema(
     strict: 'throw'
   }
 );
+
+taskSchema.plugin(toJson);
 
 module.exports = model('Task', taskSchema);
