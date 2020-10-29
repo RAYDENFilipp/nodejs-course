@@ -1,11 +1,11 @@
 const { model, Schema } = require('mongoose');
 const toJson = require('@meanie/mongoose-to-json');
+const encryptUserPassword = require('./plugins/encryptUserPassword');
 
 const userSchema = new Schema(
   {
     name: {
-      type: String,
-      required: true
+      type: String
     },
     login: {
       type: String,
@@ -24,6 +24,6 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.plugin(toJson);
+userSchema.plugin(toJson).plugin(encryptUserPassword);
 
 module.exports = model('User', userSchema);

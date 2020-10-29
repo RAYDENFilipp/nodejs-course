@@ -3,8 +3,8 @@ const User = require('../models/User');
 const Task = require('../models/Task');
 
 module.exports = {
-  getAll() {
-    return User.find({}).exec();
+  getAll(queryObj = {}) {
+    return User.find(queryObj).exec();
   },
 
   getEntityById(id) {

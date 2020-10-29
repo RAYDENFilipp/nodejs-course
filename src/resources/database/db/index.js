@@ -1,4 +1,5 @@
 const mockdata = require('mockdata');
+const assert = require('assert');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Board = require('../models/Board');
@@ -18,13 +19,20 @@ const initDB = async () => {
   const COLUMN_NAMES = ['Unassigned', 'In Progress', 'Done'];
 
   // init 10 Users
-  for (let i = 0; i < 10; i++) {
-    DB.USERS[i] = {
+  // first - a special admin user
+  DB.USERS.push({
+    _id: new mongoose.Types.ObjectId(),
+    name: mockdata.name(),
+    login: 'admin',
+    password: 'admin'
+  });
+  for (let i = 0; i < 9; i++) {
+    DB.USERS.push({
       _id: new mongoose.Types.ObjectId(),
       name: mockdata.name(),
       login: `${mockdata.name()}${mockdata.chars(1, 5)}`,
       password: `${mockdata.chars(5, 10)}`
-    };
+    });
   }
 
   // init 15 Tasks
@@ -94,6 +102,13 @@ function connectDb() {
   });
 
   const db = mongoose.connection;
+
+  // Use this to allow only strings to pass the `required` string validator
+  mongoose.Schema.Types.String.cast(v => {
+    assert.ok(typeof v === 'string' && v.length);
+
+    return v;
+  });
 
   db.on('error', console.error.bind(console, 'connection error:'));
   db.once('open', async () => {
