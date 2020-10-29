@@ -1,25 +1,25 @@
+const ServerResponseError = require('./error/ServerResponseError');
 const { StatusCodes } = require('http-status-codes');
 const { METHODS } = require('../../../common/config');
 
-const createEntitiesRouteMiddleware = dao => async (req, res, next) => {
+const createEntitiesRouteMiddleware = dao => async (req, res) => {
   let entityToReturn;
 
-  try {
-    switch (req.method) {
-      case METHODS.GET:
-        entityToReturn = await dao.getAll();
-        break;
-      case METHODS.POST:
-        entityToReturn = await dao.createEntity(req.body);
-        break;
-      default:
-        res.sendStatus(StatusCodes.NOT_IMPLEMENTED);
-    }
+  switch (req.method) {
+    case METHODS.GET:
+      entityToReturn = await dao.getAll();
+      break;
+    case METHODS.POST:
+      entityToReturn = await dao.createEntity(req.body);
+      break;
+    default:
+      throw new ServerResponseError(StatusCodes.NOT_IMPLEMENTED);
+  }
 
-    if (entityToReturn) res.json(entityToReturn);
-    else res.sendStatus(StatusCodes.NOT_FOUND);
-  } catch (err) {
-    return next(err);
+  if (entityToReturn) {
+    res.json(entityToReturn);
+  } else {
+    throw new ServerResponseError(StatusCodes.NOT_FOUND);
   }
 };
 

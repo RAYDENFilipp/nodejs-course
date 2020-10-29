@@ -2,16 +2,13 @@ const Task = require('../models/Task');
 
 let board;
 
-const validateColumn = entityWithBoardId => {
+const isValidColumn = entityWithBoardId => {
   // filter out a Task with an invalid columnId
-  if (
-    entityWithBoardId.columnId &&
-    !board.columns.find(
-      column => column._id.toString() === entityWithBoardId.columnId
-    )
-  ) {
-    throw new Error('not valid');
-  }
+  if (!entityWithBoardId.columnId) return !entityWithBoardId.columnId;
+
+  return board.columns.find(
+    column => column._id.toString() === entityWithBoardId.columnId
+  );
 };
 
 module.exports = {
@@ -33,9 +30,9 @@ module.exports = {
       boardId: board._id
     };
 
-    validateColumn(entityWithBoardId);
-
-    return Task.create(entityWithBoardId);
+    if (isValidColumn(entityWithBoardId)) {
+      return Task.create(entityWithBoardId);
+    }
   },
 
   replaceEntity(id, entityData) {
@@ -44,19 +41,19 @@ module.exports = {
       boardId: board._id
     };
 
-    validateColumn(entityWithBoardId);
+    if (isValidColumn(entityWithBoardId)) {
+      const options = {
+        new: true,
+        omitUndefined: true,
+        returnOriginal: false
+      };
 
-    const options = {
-      new: true,
-      omitUndefined: true,
-      returnOriginal: false
-    };
-
-    return Task.findOneAndReplace(
-      { _id: id },
-      entityWithBoardId,
-      options
-    ).exec();
+      return Task.findOneAndReplace(
+        { _id: id },
+        entityWithBoardId,
+        options
+      ).exec();
+    }
   },
 
   async deleteEntity(id) {

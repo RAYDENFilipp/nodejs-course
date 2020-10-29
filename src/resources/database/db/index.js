@@ -1,10 +1,12 @@
 const mockdata = require('mockdata');
+const assert = require('assert');
 const mongoose = require('mongoose');
+const { getRandomEntityIdCreator } = require('./utils');
 const User = require('../models/User');
 const Board = require('../models/Board');
-const { getRandomEntityIdCreator } = require('./utils');
-const { MONGO_CONNECTION_STRING } = require('../../../common/config');
 const Task = require('../models/Task');
+const { MONGO_CONNECTION_STRING } = require('../../../common/config');
+const { logger } = require('../../../common/logger');
 
 // INITIALIZATION STEP
 const initDB = async () => {
@@ -18,13 +20,20 @@ const initDB = async () => {
   const COLUMN_NAMES = ['Unassigned', 'In Progress', 'Done'];
 
   // init 10 Users
-  for (let i = 0; i < 10; i++) {
-    DB.USERS[i] = {
+  // first - a special admin user
+  DB.USERS.push({
+    _id: new mongoose.Types.ObjectId(),
+    name: mockdata.name(),
+    login: 'admin',
+    password: 'admin'
+  });
+  for (let i = 0; i < 9; i++) {
+    DB.USERS.push({
       _id: new mongoose.Types.ObjectId(),
       name: mockdata.name(),
       login: `${mockdata.name()}${mockdata.chars(1, 5)}`,
       password: `${mockdata.chars(5, 10)}`
-    };
+    });
   }
 
   // init 15 Tasks
@@ -90,12 +99,20 @@ function connectDb() {
     useCreateIndex: true
   };
   mongoose.connect(MONGO_CONNECTION_STRING, mongooseOptions, err => {
-    if (err) console.error('Initial connection error: ', err);
+    if (err) logger.error(`Initial connection error: ${err}`);
   });
 
   const db = mongoose.connection;
 
-  db.on('error', console.error.bind(console, 'connection error:'));
+  // Use this to allow only strings to pass the `required` string validator
+  mongoose.Schema.Types.String.cast(v => {
+    assert.ok(typeof v === 'string' && v.length);
+
+    return v;
+  });
+
+  db.on('error', err => logger.error(`After initial connection error:${err}`));
+  db.on('disconnected', () => logger.error('Connection lost'));
   db.once('open', async () => {
     await db.dropDatabase();
     await initDB();

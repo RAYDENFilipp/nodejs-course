@@ -1,9 +1,10 @@
 const app = require('./app');
+const { logger } = require('./common/logger');
 const { PORT } = require('./common/config');
 const { connectDb } = require('./resources/database/db');
 
-connectDb();
+connectDb(app);
 
 app.listen(PORT, () =>
-  console.log(`App is running on http://localhost:${PORT}`)
+  logger.info(`App is running on http://localhost:${PORT}`)
 );
